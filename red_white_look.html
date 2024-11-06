@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metabolite Helper</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7; /* Light grey background */
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #d93d3d; /* Red */
+            font-size: 3em;
+            margin-top: 20px;
+            text-shadow: 2px 2px #eee;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            margin: 50px 10%;
+            gap: 20px;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            padding: 20px;
+            max-width: 300px;
+            color: #333;
+            transition: transform 0.2s, background-color 0.2s, color 0.2s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+            background-color: #d93d3d; /* Red background */
+            color: #fff; /* White text */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h2 {
+            font-size: 1.5em;
+            color: #d93d3d; /* Red text */
+            margin-bottom: 10px;
+            transition: color 0.2s;
+        }
+
+        .card:hover h2 {
+            color: #fff; /* Change heading to white on hover */
+        }
+
+        .card p {
+            color: #555; /* Lighter grey text */
+            line-height: 1.6;
+            transition: color 0.2s;
+        }
+
+        .card:hover p {
+            color: #f0f0f0; /* Lighter grey text on hover */
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+                margin: 20px 5%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Metabolite Helper</h1>
+    
+    <div class="container">
+        <!-- Card 1: Import CD Files -->
+        <div class="card">
+            <h2>Import CD Files</h2>
+            <p>Upload your Compound Discoverer files here to start your metabolite analysis. Ensure all files are in the correct format to avoid processing issues.</p>
+        </div>
+
+        <!-- Card 2: Validation in Progress -->
+        <div class="card">
+            <h2>Validation in Progress</h2>
+            <p>Your data is being checked for accuracy and consistency. This step ensures all metabolites meet the required criteria before moving to the next stage.</p>
+        </div>
+
+        <!-- Card 3: Ready for Plotting -->
+        <div class="card">
+            <h2>Ready for Plotting</h2>
+            <p>Visualize and analyze your metabolites with a variety of graphing options. Choose from bar plots, heatmaps, and more to gain insights into your data.</p>
+        </div>
+    </div>
+
+</body>
+</html>
