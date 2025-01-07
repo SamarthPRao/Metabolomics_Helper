@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rename Columns</title>
+</head>
+<body>
+    <h1>Rename Columns</h1>
+    <form action="/rename" method="post">
+        {% for group, columns in similar_columns.items() %}
+            <fieldset>
+                <legend>Group {{ loop.index }}</legend>
+                <p>Similar Columns: {{ columns }}</p>
+                <label for="rename_{{ loop.index }}">New Name:</label>
+                <input type="text" id="rename_{{ loop.index }}" name="rename_{{ group }}" required>
+            </fieldset>
+            <br>
+        {% endfor %}
+        <button type="submit">Submit Changes</button>
+    </form>
+</body>
+</html>

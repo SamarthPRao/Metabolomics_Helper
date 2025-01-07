@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Files</title>
+</head>
+<body>
+    <h1>Upload Files</h1>
+    <form action="/process" method="post" enctype="multipart/form-data">
+        <label for="cd_data">Upload cd_data:</label>
+        <input type="file" name="cd_data" id="cd_data" required><br><br>
+        
+        <label for="validated_data">Upload validated_data:</label>
+        <input type="file" name="validated_data" id="validated_data" required><br><br>
+        
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
