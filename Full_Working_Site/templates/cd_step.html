@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Files</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    
+    <h1>Upload CD Files</h1>
+    <div class="container">
+    <form action="/cd_process" method="post" enctype="multipart/form-data">
+        <label for="cs_data">Upload ChemSpider XLSX:</label>
+        <input type="file" name="cs_data" id="cs_data" required><br><br>
+        
+        <label for="mz_data">Upload MZ Cloud XLSX:</label>
+        <input type="file" name="mz_data" id="mz_data" required><br><br>
+
+        <label for="ml_data">Upload Masslist XLSX:</label>
+        <input type="file" name="ml_data" id="ml_data" required><br><br>
+
+        <label for="database">Upload Metabolite Database XLSX:</label>
+        <input type="file" name="database" id="database" required><br><br>
+        
+        <input type="submit" value="Submit">
+    </form>
+    </div>
+</body>
+</html>

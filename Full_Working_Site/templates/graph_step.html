@@ -2,17 +2,20 @@
 <html>
 <head>
     <title>Upload Files</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <h1>Upload Files</h1>
-    <form action="/process" method="post" enctype="multipart/form-data">
-        <label for="cd_data">Upload cd_data:</label>
+    <div class="container">
+    <form action="/graph_process" method="post" enctype="multipart/form-data">
+        <label for="cd_data">Upload CD Data CSV:</label>
         <input type="file" name="cd_data" id="cd_data" required><br><br>
         
-        <label for="validated_data">Upload validated_data:</label>
+        <label for="validated_data">Upload Validated Data CSV:</label>
         <input type="file" name="validated_data" id="validated_data" required><br><br>
         
         <input type="submit" value="Submit">
     </form>
+    </div>
 </body>
 </html>

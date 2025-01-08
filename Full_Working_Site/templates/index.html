@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metabolite Helper</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+
+    <h1>Metabolite Helper</h1>
+    
+    <div class="container">
+        <!-- Card 1: Import CD Files -->
+        <a href = cd_step.html class="card">
+            <h2>Import CD Files</h2>
+            <p>Upload your Compound Discoverer files here to start your metabolite analysis. Ensure all files are in the correct format to avoid processing issues.</p>
+        </a>
+
+        <!-- Card 2: Validation in Progress -->
+        <div class="card">
+            <h2>Validation in Progress</h2>
+            <p>Work In Progress</p>
+        </div>
+
+        <!-- Card 3: Ready for Plotting -->
+        <a href="graph_step.html" class="card">
+            <h2>Ready for Plotting</h2>
+            <p>Visualize and analyze your metabolites with a variety of graphing options. Choose from bar plots, heatmaps, and more to gain insights into your data.</p>
+        </a>
+    </div>
+
+</body>
+</html>
