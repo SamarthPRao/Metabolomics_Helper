@@ -1,6 +1,6 @@
 # To Do:
+- Deploy Website somehow
 - Finish building Structure Graph representations
-- Build database for CNN (ideally 200,000 compounds)
-- Develop web designs for other 3 pages
-- Add functionality to web pages (JS / Python with Flask)
-- Configure Server using Google Cloud Services
+- Build database for CNN (ideally 200,000 compounds, or add noise to reach that)
+- Build Graph recognition network or algorithm
+
