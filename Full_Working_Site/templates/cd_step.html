@@ -1,28 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Upload Files</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload CD Files</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    
-    <h1>Upload CD Files</h1>
-    <div class="container">
-    <form action="/cd_process" method="post" enctype="multipart/form-data">
-        <label for="cs_data">Upload ChemSpider XLSX:</label>
-        <input type="file" name="cs_data" id="cs_data" required><br><br>
-        
-        <label for="mz_data">Upload MZ Cloud XLSX:</label>
-        <input type="file" name="mz_data" id="mz_data" required><br><br>
-
-        <label for="ml_data">Upload Masslist XLSX:</label>
-        <input type="file" name="ml_data" id="ml_data" required><br><br>
-
-        <label for="database">Upload Metabolite Database XLSX:</label>
-        <input type="file" name="database" id="database" required><br><br>
-        
-        <input type="submit" value="Submit">
-    </form>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="home-link">Home</a>
+      <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
     </div>
+    <nav>
+      <ul>
+        <li><a href="cd_step.html">Import CD Files</a></li>
+        <li><a href="#">Validation in Progress</a></li>
+        <li><a href="graph_step.html">Ready for Plotting</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="main-content">
+    <header>
+      <h1>Upload CD Files</h1>
+    </header>
+    <div class="form_container">
+      <form action="/cd_process" method="post" enctype="multipart/form-data" class="upload-form">
+        <div class="form-group">
+          <label for="cs_data">Upload ChemSpider XLSX:</label>
+          <input type="file" name="cs_data" id="cs_data" required>
+        </div>
+        <div class="form-group">
+          <label for="mz_data">Upload MZ Cloud XLSX:</label>
+          <input type="file" name="mz_data" id="mz_data" required>
+        </div>
+        <div class="form-group">
+          <label for="ml_data">Upload Masslist XLSX:</label>
+          <input type="file" name="ml_data" id="ml_data" required>
+        </div>
+        <div class="form-group">
+          <label for="database">Upload Metabolite Database XLSX:</label>
+          <input type="file" name="database" id="database" required>
+        </div>
+        <div class="form-group">
+          <input type="submit" value="Submit" class="submit-btn">
+        </div>
+      </form>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 </body>
 </html>

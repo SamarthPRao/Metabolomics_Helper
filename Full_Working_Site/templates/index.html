@@ -1,35 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metabolite Helper</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metabolite Helper</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-
 <body>
-
-    <h1>Metabolite Helper</h1>
-    
-    <div class="container">
-        <!-- Card 1: Import CD Files -->
-        <a href = cd_step.html class="card">
-            <h2>Import CD Files</h2>
-            <p>Upload your Compound Discoverer files here to start your metabolite analysis. Ensure all files are in the correct format to avoid processing issues.</p>
-        </a>
-
-        <!-- Card 2: Validation in Progress -->
-        <div class="card">
-            <h2>Validation in Progress</h2>
-            <p>Work In Progress</p>
-        </div>
-
-        <!-- Card 3: Ready for Plotting -->
-        <a href="graph_step.html" class="card">
-            <h2>Ready for Plotting</h2>
-            <p>Visualize and analyze your metabolites with a variety of graphing options. Choose from bar plots, heatmaps, and more to gain insights into your data.</p>
-        </a>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <!-- Home now links to the root URL ("/"). Adjust if needed. -->
+      <a href="/" class="home-link">Home</a>
+      <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
     </div>
+    <nav>
+      <ul>
+        <!-- Adjust these hrefs as needed for your routing -->
+        <li><a href="/cd_step.html">Import CD Files</a></li>
+        <li><a href="#">Validation in Progress</a></li>
+        <li><a href="/graph_step.html">Ready for Plotting</a></li>
+      </ul>
+    </nav>
+  </aside>
 
+  <!-- Main Content -->
+  <div class="main-content">
+    <header>
+      <h1>Metabolite Helper</h1>
+    </header>
+
+    <div class="card_container">
+      <!-- Card 1: Import CD Files -->
+      <a href="/cd_step.html" class="card">
+        <h2>Import CD Files</h2>
+        <p>
+          Upload your Compound Discoverer files here to start your metabolite analysis.
+          Ensure all files are in the correct format to avoid processing issues.
+        </p>
+      </a>
+
+      <!-- Card 2: Validation in Progress -->
+      <div class="card">
+        <h2>Validation in Progress</h2>
+        <p>Work In Progress</p>
+        <a href = "https://github.com/SamarthPRao/Metabolomics_Helper/tree/main">Link to Github Repo</a>
+      </div>
+
+      <!-- Card 3: Ready for Plotting -->
+      <a href="/graph_step.html" class="card">
+        <h2>Ready for Plotting</h2>
+        <p>
+          Visualize your metabolites with bar plots and excel sheets ready for Metaboanalyst. There, you can use a variety of graphing utilities to dive deeper into your data. 
+        </p>
+      </a>
+    </div>
+  
+
+  <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 </body>
 </html>
+

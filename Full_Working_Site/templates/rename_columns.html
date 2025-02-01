@@ -7,18 +7,42 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Rename Columns</h1>
-    <form action="/rename" method="post">
-        {% for group, columns in similar_columns.items() %}
-            <fieldset>
-                <legend>Group {{ loop.index }}</legend>
-                <p>Similar Columns: {{ columns }}</p>
-                <label for="rename_{{ loop.index }}">New Name:</label>
-                <input type="text" id="rename_{{ loop.index }}" name="rename_{{ group }}" required>
-            </fieldset>
-            <br>
-        {% endfor %}
-        <button type="submit">Submit Changes</button>
-    </form>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+          <a href="/" class="home-link">Home</a>
+          <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        </div>
+        <nav>
+          <ul>
+            <li><a href="cd_step.html">Import CD Files</a></li>
+            <li><a href="#">Validation in Progress</a></li>
+            <li><a href="graph_step.html">Ready for Plotting</a></li>
+          </ul>
+        </nav>
+      </aside>
+    
+    <div class="main-content">
+        <header>
+        <h1>Rename Columns</h1>
+        </header>
+        <form action="/rename" method="post" class="form_container">
+            {% for group, columns in similar_columns.items() %}
+                <fieldset>
+                    <legend>Group {{ loop.index }}</legend>
+                    <p>Similar Columns: {{ columns }}</p>
+                    <label for="rename_{{ loop.index }}">New Name:</label>
+                    <input type="text" id="rename_{{ loop.index }}" name="rename_{{ group }}" required>
+                </fieldset>
+                <br>
+            {% endfor %}
+            <button type="submit" class="submit-btn">Submit Changes</button>
+        </form>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+        }
+    </script>
 </body>
 </html>

@@ -39,7 +39,7 @@ def generate_graph(file):
 
     # Data preparation
     data1 = df['Main Category'].value_counts()
-    data2 = df['General Classification'].value_counts()
+    data2 = df[df['Main Category'] == "Metabolite"]['General Classification'].value_counts()
     data3 = df[df['General Classification'] == 'Flavonoid']['Sub-class'].value_counts()
 
     # Create bar graphs

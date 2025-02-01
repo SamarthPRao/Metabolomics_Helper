@@ -1,21 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Upload Files</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Files for Plotting</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Upload Files</h1>
-    <div class="container">
-    <form action="/graph_process" method="post" enctype="multipart/form-data">
-        <label for="cd_data">Upload CD Data CSV:</label>
-        <input type="file" name="cd_data" id="cd_data" required><br><br>
-        
-        <label for="validated_data">Upload Validated Data CSV:</label>
-        <input type="file" name="validated_data" id="validated_data" required><br><br>
-        
-        <input type="submit" value="Submit">
-    </form>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="home-link">Home</a>
+      <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
     </div>
+    <nav>
+      <ul>
+        <li><a href="cd_step.html">Import CD Files</a></li>
+        <li><a href="#">Validation in Progress</a></li>
+        <li><a href="graph_step.html">Ready for Plotting</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="main-content">
+    <header>
+      <h1>Upload Files for Plotting</h1>
+    </header>
+    <div class="form_container">
+      <form action="/graph_process" method="post" enctype="multipart/form-data" class="upload-form">
+        <div class="form-group">
+          <label for="cd_data">Upload CD Data CSV:</label>
+          <input type="file" name="cd_data" id="cd_data" required>
+        </div>
+        <div class="form-group">
+          <label for="validated_data">Upload Validated Data CSV:</label>
+          <input type="file" name="validated_data" id="validated_data" required>
+        </div>
+        <div class="form-group">
+          <input type="submit" value="Submit" class="submit-btn">
+        </div>
+      </form>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 </body>
 </html>
+
