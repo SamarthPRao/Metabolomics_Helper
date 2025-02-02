@@ -35,7 +35,7 @@ a:link, a:visited, a:hover, a:active {
   position: fixed;
   top: 0;
   left: 0;
-  width: 240px;
+  width: 290px;
   height: 100vh;
   background-color: var(--dark-gray);
   color: var(--ut-white);
@@ -44,7 +44,7 @@ a:link, a:visited, a:hover, a:active {
 }
 
 .sidebar.collapsed {
-  width: 60px;
+  width: 80px;
 }
 
 .sidebar .sidebar-header {
@@ -74,6 +74,14 @@ a:link, a:visited, a:hover, a:active {
   cursor: pointer;
 }
 
+.sidebar a .material-icons {
+  margin-right: 10px; /* Space between icon and text */
+  font-size: 1.5em; /* Adjust icon size */
+  color: var(--ut-white); /* Ensure icon color matches text */
+  transition: color 0.3s;
+  vertical-align: bottom;
+}
+
 .sidebar nav ul {
   list-style: none;
   padding: 0;
@@ -90,7 +98,18 @@ a:link, a:visited, a:hover, a:active {
   display: block;
   padding: 5px 8px;
   border-radius: 10px;
+  align-items: bottom;
   transition: background 0.3s;
+}
+
+
+
+.sidebar nav ul li a .material-icons {
+  margin-right: 10px; /* Space between icon and text */
+  font-size: 1.2em; /* Adjust icon size */
+  color: var(--ut-white); /* Ensure icon color matches text */
+  transition: color 0.3s;
+  vertical-align: bottom;
 }
 
 .sidebar nav ul li a:hover {

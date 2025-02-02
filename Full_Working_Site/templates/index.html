@@ -4,22 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Metabolite Helper</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  
 </head>
 <body>
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <!-- Home now links to the root URL ("/"). Adjust if needed. -->
-      <a href="/" class="home-link">Home</a>
+      <a href="/" class="home-link"><span class="material-icons">home</span> Home</a>
       <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
     </div>
     <nav>
       <ul>
         <!-- Adjust these hrefs as needed for your routing -->
-        <li><a href="/cd_step.html">Import CD Files</a></li>
-        <li><a href="#">Validation in Progress</a></li>
-        <li><a href="/graph_step.html">Ready for Plotting</a></li>
+        <li><a href="/cd_step.html"><span class="material-icons">upload_file</span>Import CD Files</a></li>
+        <li><a href="#"><span class="material-icons">autorenew</span>Validation in Progress</a></li>
+        <li><a href="/graph_step.html"><span class="material-icons">insert_chart</span>Ready for Plotting</a></li>
+        
       </ul>
     </nav>
   </aside>
