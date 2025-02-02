@@ -12,7 +12,7 @@
 }
 
 body {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: Optima, Candara, 'Noto Sans', source-sans-pro, sans-serif;
   background-color: var(--light-gray);
   color: var(--dark-gray);
   margin: 0;
@@ -29,15 +29,15 @@ a:link, a:visited, a:hover, a:active {
 
 /* Sidebar Styles */
 .sidebar {
-  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  font-size: 1.2em;
+  font-family: Optima, Candara, 'Noto Sans', source-sans-pro, sans-serif;
   font-style: italic;
+  font-size: 1.2em;
   position: fixed;
   top: 0;
   left: 0;
   width: 240px;
   height: 100vh;
-  background-color: var(--ut-orange);
+  background-color: var(--dark-gray);
   color: var(--ut-white);
   transition: width 0.3s;
   overflow: hidden;
@@ -88,11 +88,17 @@ a:link, a:visited, a:hover, a:active {
   color: var(--ut-white);
   text-decoration: none;
   display: block;
+  padding: 5px 8px;
+  border-radius: 10px;
   transition: background 0.3s;
 }
 
 .sidebar nav ul li a:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  /* font-size: large; */
+  background-color: var(--ut-orange);
+  border-radius: 10px; /* Adds rounded edges on hover */
+   
+  transition: background-color 0.1s;
 }
 
 /* Main Content Area */
