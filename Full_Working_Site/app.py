@@ -11,7 +11,8 @@ from graph_maker import generate_graph
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Necessary for session handling
-UPLOAD_FOLDER = 'uploads'
+# Define the upload folder path
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
