@@ -17,7 +17,7 @@
           <ul>
             <li><a href="/cd_step.html"><span class="material-icons">upload_file</span>Import CD Files</a></li>
             <li><a href="#"><span class="material-icons">autorenew</span>Validation in Progress</a></li>
-            <li><a href="/graph_step.html"><span class="material-icons">insert_chart</span>Ready for Plotting</a></li>
+            <li><a href="/graph_step.html" class="sidebar_current"><span class="material-icons">insert_chart</span>Ready for Plotting</a></li>
           </ul>
         </nav>
       </aside>
@@ -26,7 +26,7 @@
         <header>
         <h1>Rename Columns</h1>
         </header>
-        <form action="/rename" method="post" class="form_container">
+        <form action="/rename" method="post" class="form_container" style="max-width: 1000px;">
             {% for group, columns in similar_columns.items() %}
                 <fieldset>
                     <legend>Group {{ loop.index }}</legend>
@@ -40,10 +40,6 @@
         </form>
     </div>
 
-    <script>
-        function toggleSidebar() {
-            document.querySelector('.sidebar').classList.toggle('collapsed');
-        }
-    </script>
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 </body>
 </html>

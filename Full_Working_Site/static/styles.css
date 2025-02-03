@@ -120,6 +120,11 @@ a:link, a:visited, a:hover, a:active {
   transition: background-color 0.1s;
 }
 
+.sidebar_current {
+  background-color: var(--ut-orange);
+  border-radius: 10px;
+}
+
 /* Main Content Area */
 .main-content {
   margin-left: 240px;
