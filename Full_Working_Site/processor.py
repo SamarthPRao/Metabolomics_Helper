@@ -165,6 +165,11 @@ def process_files(cs, mz, ml, database):
         ml_match_location = df_ml.iloc[1].to_list().index('Compound Match')
     else:
         ml_match_location = None
+    
+    if 'npaid' in lower_bar_ml:
+        npaid_location = df_ml.iloc[1].to_list().index('npaid')
+    else:
+        npaid_location = None  
 
     mlid_list = []
     ml_structure_list = []
@@ -197,13 +202,23 @@ def process_files(cs, mz, ml, database):
                 ml_structure_list.append('')
             else:
                 idx = val
+                appended = False
+
             while idx < df_ml.shape[0] and idx not in compound_locations_ml_set:
                 if df_ml.iloc[val - 2, match_type_col_ml] == 'Full match':
-                    appended = True
-                    mlid_list.append(df_ml.iloc[idx, ml_id_location][28:])
+                    # This means that it's an FL###### code
+                    if type(df_ml.iloc[idx, ml_id_location]) != float:
+                        appended = True
+                        mlid_list.append(df_ml.iloc[idx, ml_id_location][28:])
+          
+                    # This means that it's a NPA##### code
+                    else:
+                        appended = True
+                        mlid_list.append(df_ml.iloc[idx, npaid_location])
                     ml_structure_list.append(df_ml.iloc[idx, ml_structure_location])
                     break
                 idx += 1
+            
             if not appended:
                 mlid_list.append('')
                 ml_structure_list.append('')
@@ -392,7 +407,10 @@ def process_files(cs, mz, ml, database):
         cell = sheet[f"{masslist_column}{row}"]
         if cell.value:  # If the cell is not blank
             masslist_id = str(cell.value)
-            link = f"http://metabolomics.jp/wiki/{masslist_id}"
+            if masslist_id.startswith('FL'):
+                link = f"http://metabolomics.jp/wiki/{masslist_id}"
+            else:
+                link = f"https://www.npatlas.org/explore/compounds/{masslist_id}"
             cell.hyperlink = link
             cell.value = masslist_id  # Keeps the text the same as the original ID
             cell.style = "Hyperlink"  # Apply hyperlink style for consistent formatting
