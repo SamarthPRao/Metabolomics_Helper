@@ -141,7 +141,6 @@ def process_files(cs, mz, ml, database):
             else:
                 mz_id_list.append(candidates[max(candidates.keys())][0])
                 mz_structure_list.append(candidates[max(candidates.keys())][1])
-    #laksdnfjlansdjgna;kngkj;angjnajkldgn
     # Getting compound names for this file
     compound_names_mz = df_mz.loc[:, 'Name'][compound_locations_mz].to_list()
 
@@ -176,6 +175,7 @@ def process_files(cs, mz, ml, database):
     compound_locations_ml_set = set(compound_locations_ml)
 
     if ml_match_location:
+        print('hello')
         for i, val in enumerate(np.array(compound_locations_ml) + 2):
             appended = False
             if val in compound_locations_ml_set:
@@ -194,8 +194,8 @@ def process_files(cs, mz, ml, database):
                 mlid_list.append('')
                 ml_structure_list.append('')
     else:
+        print('into the else')
         match_type_col_ml = df_ml.columns.to_list().index('Annot. Source: MassList Search')
-        appended = False
         for i, val in enumerate(np.array(compound_locations_ml) + 2):
             if val in compound_locations_ml_set:
                 mlid_list.append('')
@@ -203,29 +203,26 @@ def process_files(cs, mz, ml, database):
             else:
                 idx = val
                 appended = False
+                while idx < df_ml.shape[0] and idx not in compound_locations_ml_set:
+                    if df_ml.iloc[val - 2, match_type_col_ml] == 'Full match':
+                        # This means that it's an FL###### code
+                        if type(df_ml.iloc[idx, ml_id_location]) != float:
+                            appended = True
+                            mlid_list.append(df_ml.iloc[idx, ml_id_location][28:])
 
-            while idx < df_ml.shape[0] and idx not in compound_locations_ml_set:
-                if df_ml.iloc[val - 2, match_type_col_ml] == 'Full match':
-                    # This means that it's an FL###### code
-                    if type(df_ml.iloc[idx, ml_id_location]) != float:
-                        appended = True
-                        mlid_list.append(df_ml.iloc[idx, ml_id_location][28:])
-          
-                    # This means that it's a NPA##### code
-                    else:
-                        appended = True
-                        mlid_list.append(df_ml.iloc[idx, npaid_location])
-                    ml_structure_list.append(df_ml.iloc[idx, ml_structure_location])
-                    break
-                idx += 1
-            
-            if not appended:
-                mlid_list.append('')
-                ml_structure_list.append('')
+                        # This means that it's a NPA##### code
+                        else:
+                            appended = True
+                            mlid_list.append(df_ml.iloc[idx, npaid_location])
+                        ml_structure_list.append(df_ml.iloc[idx, ml_structure_location])
+                        break
+                    idx += 1
+                if not appended:
+                    mlid_list.append('')
+                    ml_structure_list.append('')
 
     # getting names from mass list
     compound_names_ml = df_ml.loc[:, 'Name'][compound_locations_ml].to_list()
-
     ml_name_set = set()
     ml_dict = {}
     for i in range(len(compound_names_ml)):
