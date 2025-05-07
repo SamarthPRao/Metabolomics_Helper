@@ -5,124 +5,127 @@ from openpyxl.styles import PatternFill, Font, Alignment
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.formatting.rule import FormulaRule
 
+# Function for removing nan's
+def remove_nans(inp):
+    out = []
+    for i in inp:
+        if type(i) == str:
+            out.append(i)
+    return out
+
+# Function to find compound locations
+def get_compound_locations(df, lower_bar):
+        compound_locations = []
+        for i in range(df.shape[0]):
+            if remove_nans(df.iloc[i]) == lower_bar:
+                compound_locations.append(i - 1)
+        return compound_locations
+
+
 def process_files(cs, mz, ml, database):
 
     df_cs = pd.read_excel(cs)
     df_mz = pd.read_excel(mz)
     df_ml = pd.read_excel(ml)
+
     df_database = pd.read_excel(database)
 
-    # function for removing nan's
-    def remove_nans(inp):
-        out = []
-        for i in inp:
-            if type(i) == str:
-                out.append(i)
-        return out
+    # Define the lower bar with headers for compound data
+    lower_bar_cs = remove_nans(df_cs.iloc[1])
+    lower_bar_mz = remove_nans(df_mz.iloc[1])
+    lower_bar_ml = remove_nans(df_ml.iloc[1])
+    
+    # find where compounds are located in all three sheets
+    compound_locations_cs = get_compound_locations(df_cs, lower_bar_cs)
+    compound_locations_mz = get_compound_locations(df_mz, lower_bar_mz)
+    compound_locations_ml = get_compound_locations(df_ml, lower_bar_ml)
 
-    # finds row of lower bar
-    lower_bar_cs_init = df_cs.iloc[1]
-    lower_bar_mz_init = df_mz.iloc[1]
-    lower_bar_ml_init = df_ml.iloc[1]
 
-    # remove nan's
-    lower_bar_cs = remove_nans(lower_bar_cs_init)
-    lower_bar_mz = remove_nans(lower_bar_mz_init)
-    lower_bar_ml = remove_nans(lower_bar_ml_init)
+    # Finds relevant indices for compound search later
+    cs_id_location, cs_ref_location, cs_structure_location = [df_cs.iloc[1].tolist().index(k) for k in ['CSID', '# References', 'Structure']]
+    mz_id_location, mz_match_location, mz_structure_location = [df_mz.iloc[1].tolist().index(k) for k in ['mzCloud ID', 'Best Match', 'Structure']]
+    ml_id_location, ml_structure_location = [df_ml.iloc[1].tolist().index(k) for k in ['FL_index', 'Structure']]
 
-    # finds where the compounds are
-    compound_locations_cs = []
-    for i in range(df_cs.shape[0]):
-        if remove_nans(df_cs.iloc[i]) == lower_bar_cs:
-            compound_locations_cs.append(i - 1)
+    #========================================================================#
+    #=====                          ChemSpider                          =====#
+    #========================================================================#
 
-    # Gets information about where data is located
-    cs_id_location = df_cs.iloc[1].to_list().index('CSID')
-    cs_ref_location = df_cs.iloc[1].to_list().index('# References')
-    cs_structure_location = df_cs.iloc[1].to_list().index('Structure')
+
+    # Find column where 'Match Type' is located, if it exists
     if 'Match Type' in lower_bar_cs:
-        cs_match_type_location = df_cs.iloc[1].to_list().index('Match Type')
+        cs_match_type_location = df_cs.iloc[1].tolist().index('Match Type')
     else:
         cs_match_type_location = None
 
+    # Prepare output lists and set for fast lookup
     csid_list = []
     cs_structure_list = []
     compound_locations_cs_set = set(compound_locations_cs)
 
-    if cs_match_type_location:
-        for i, val in enumerate(np.array(compound_locations_cs) + 2):
-            if val in compound_locations_cs_set:
-                csid_list.append('')
-                cs_structure_list.append('')
-            else:
-                idx = val
-                candidates = {}
-                while idx < df_cs.shape[0] and idx not in compound_locations_cs_set:
-                    if df_cs.iloc[idx, cs_match_type_location] == 'Full match':
-                        candidates[df_cs.iloc[idx, cs_ref_location]] = [df_cs.iloc[idx, cs_id_location],
-                                                            df_cs.iloc[idx, cs_structure_location]]
-                    idx += 1
-                if len(candidates) == 0:
-                    csid_list.append('')
-                    cs_structure_list.append('')
-                else:
-                    csid_list.append(candidates[max(candidates.keys())][0])
-                    cs_structure_list.append(candidates[max(candidates.keys())][1])
-    else:
-        match_type_col_cs = df_cs.columns.to_list().index('Annot. Source: ChemSpider Search')
-        for i, val in enumerate(np.array(compound_locations_cs) + 2):
-            if val in compound_locations_cs_set:
-                csid_list.append('')
-                cs_structure_list.append('')
-            else:
-                idx = val
-                candidates = {}
-                while idx < df_cs.shape[0] and idx not in compound_locations_cs_set:
-                    if df_cs.iloc[val - 2, match_type_col_cs] == 'Full match':
-                        candidates[df_cs.iloc[idx, cs_ref_location]] = [df_cs.iloc[idx, cs_id_location],
-                                                            df_cs.iloc[idx, cs_structure_location]]
-                    idx += 1
-                if len(candidates) == 0:
-                    csid_list.append('')
-                    cs_structure_list.append('')
+    # Determine the column to use for match type - 'Match Type' may not exist
+    match_type_col_cs = (
+        cs_match_type_location
+        if cs_match_type_location is not None
+        else df_cs.columns.get_loc('Annot. Source: ChemSpider Search')
+    )
 
-                else:
-                    csid_list.append(candidates[max(candidates.keys())][0])
-                    cs_structure_list.append(candidates[max(candidates.keys())][1])
+    def get_best_candidate_cs(start_idx, match_col_idx, match_value='Full match'):
+        # Return best CSID and structure for a compound starting at start_idx
+        candidates = {}
+        idx = start_idx
+        while idx < df_cs.shape[0] and idx not in compound_locations_cs_set:
+            if df_cs.iloc[start_idx - 2, match_col_idx] == match_value:
+                ref_count = df_cs.iloc[idx, cs_ref_location]
+                candidates[ref_count] = [
+                    df_cs.iloc[idx, cs_id_location],
+                    df_cs.iloc[idx, cs_structure_location]
+                ]
+            idx += 1
+        return candidates.get(max(candidates, default=0), ['', ''])
 
-    compound_names_cs = df_cs.loc[:, 'Name'][compound_locations_cs].to_list()
-    compound_formulas_cs = df_cs.loc[:, 'Formula'][compound_locations_cs].to_list()
-    compound_mw_cs = df_cs.loc[:, 'Calc. MW'][compound_locations_cs].to_list()
-    compound_rt_cs = df_cs.loc[:, 'RT [min]'][compound_locations_cs].to_list()
+    # Process each compound starting point
+    for val in np.array(compound_locations_cs) + 2:
+        if val in compound_locations_cs_set:
+            csid_list.append('')
+            cs_structure_list.append('')
+        else:
+            csid, structure = get_best_candidate_cs(val, match_type_col_cs)
+            csid_list.append(csid)
+            cs_structure_list.append(structure)
 
-    # Creates dictionary with information about each compound
-    # Also removes duplicates
-    cs_name_set = set()
+    # Get relevant compound metadata columns
+    cols = ['Name', 'Formula', 'Calc. MW', 'RT [min]']
+    compound_data = {
+        col: df_cs.loc[compound_locations_cs, col].tolist()
+        for col in cols
+    }
+
+    # Create dictionary while avoiding duplicates
     cs_dict = {}
-    for i in range(len(compound_names_cs)):
-        if compound_names_cs[i] not in cs_name_set:
-            cs_name_set.add(compound_names_cs[i])
-            cs_dict[compound_names_cs[i]] = [compound_formulas_cs[i],
-                                        compound_mw_cs[i],
-                                        compound_rt_cs[i],
-                                        str(csid_list[i]),
-                                        cs_structure_list[i]]
+    for row in zip(
+        compound_data['Name'],
+        compound_data['Formula'],
+        compound_data['Calc. MW'],
+        compound_data['RT [min]'],
+        csid_list,
+        cs_structure_list
+    ):
+        name = row[0]
+        if name not in cs_dict:
+            # remember CSID is in number format, so we have to make it a string for link generation later
+            cs_dict[name] = list(row[1:-2]) + [str(row[-2]), row[-1]]
 
-    # same code as earlier
-    compound_locations_mz = []
-    for i in range(df_mz.shape[0]):
-        if remove_nans(df_mz.iloc[i]) == lower_bar_mz:
-            compound_locations_mz.append(i - 1)
 
-    # Getting locations of important data
-    mz_id_location = df_mz.iloc[1].to_list().index('mzCloud ID')
-    mz_match_location = df_mz.iloc[1].to_list().index('Best Match')
-    mz_structure_location = df_mz.iloc[1].to_list().index('Structure')
+    #========================================================================#
+    #=====                            mzCloud                           =====#
+    #========================================================================#
 
     mz_id_list = []
     mz_structure_list = []
     compound_locations_mz_set = set(compound_locations_mz)
 
+    # There is no worrying about whether match type exists here
+    # So far it is always there in the data we've seen
     for i, val in enumerate(np.array(compound_locations_mz) + 2):
         if val in compound_locations_mz_set:
             mz_id_list.append('')
@@ -133,7 +136,7 @@ def process_files(cs, mz, ml, database):
             while idx < df_mz.shape[0] and idx not in compound_locations_mz_set:
                 if 'Reference' in df_mz.iloc[idx, mz_id_location]:
                     candidates[df_mz.iloc[idx, mz_match_location]] = [df_mz.iloc[idx, mz_id_location][10:],
-                                                            df_mz.iloc[idx, mz_structure_location]]
+                                                                      df_mz.iloc[idx, mz_structure_location]]
                 idx += 1
             if len(candidates) == 0:
                 mz_id_list.append('')
@@ -152,169 +155,126 @@ def process_files(cs, mz, ml, database):
             mz_name_set.add(compound_names_mz[i])
             mz_dict[compound_names_mz[i]] = [mz_id_list[i], mz_structure_list[i]]
 
-    # same code as earlier
-    compound_locations_ml = []
-    for i in range(df_ml.shape[0]):
-        if remove_nans(df_ml.iloc[i]) == lower_bar_ml:
-            compound_locations_ml.append(i - 1)
 
-    ml_id_location = df_ml.iloc[1].to_list().index('FL_index')
-    ml_structure_location = df_ml.iloc[1].to_list().index('Structure')
-    if 'Compound Match' in lower_bar_ml:
-        ml_match_location = df_ml.iloc[1].to_list().index('Compound Match')
-    else:
-        ml_match_location = None
-    
-    if 'npaid' in lower_bar_ml:
-        npaid_location = df_ml.iloc[1].to_list().index('npaid')
-    else:
-        npaid_location = None  
+    #========================================================================#
+    #=====                           MassList                           =====#
+    #========================================================================#
+
+    # Getting relevant column locations
+    ml_match_location = df_ml.iloc[1].tolist().index('Compound Match') if 'Compound Match' in lower_bar_ml else None
+    npaid_location = df_ml.iloc[1].tolist().index('npaid') if 'npaid' in lower_bar_ml else None
+    match_type_col_ml = df_ml.columns.get_loc('Annot. Source: MassList Search')
 
     mlid_list = []
     ml_structure_list = []
     compound_locations_ml_set = set(compound_locations_ml)
 
-    if ml_match_location:
-        print('hello')
-        for i, val in enumerate(np.array(compound_locations_ml) + 2):
-            appended = False
-            if val in compound_locations_ml_set:
-                mlid_list.append('')
-                ml_structure_list.append('')
-            else:
-                idx = val
-            while idx < df_ml.shape[0] and idx not in compound_locations_ml_set:
-                if df_ml.iloc[idx, ml_match_location] == 'Full match':
-                    appended = True
-                    mlid_list.append(df_ml.iloc[idx, ml_id_location][28:])
-                    ml_structure_list.append(df_ml.iloc[idx, ml_structure_location])
-                    break
-                idx += 1
-            if not appended:
-                mlid_list.append('')
-                ml_structure_list.append('')
-    else:
-        print('into the else')
-        match_type_col_ml = df_ml.columns.to_list().index('Annot. Source: MassList Search')
-        for i, val in enumerate(np.array(compound_locations_ml) + 2):
-            if val in compound_locations_ml_set:
-                mlid_list.append('')
-                ml_structure_list.append('')
-            else:
-                idx = val
-                appended = False
-                while idx < df_ml.shape[0] and idx not in compound_locations_ml_set:
-                    if df_ml.iloc[val - 2, match_type_col_ml] == 'Full match':
-                        # This means that it's an FL###### code
-                        if type(df_ml.iloc[idx, ml_id_location]) != float:
-                            appended = True
-                            mlid_list.append(df_ml.iloc[idx, ml_id_location][28:])
+    # Helper function for ID extraction
+    def extract_ml_id(row_idx):
+        val = df_ml.iloc[row_idx, ml_id_location]
+        # If FL index found
+        if isinstance(val, str):
+            return val[28:]  # FL##########
+        # If npaid index found
+        elif npaid_location is not None:
+            return df_ml.iloc[row_idx, npaid_location]  # NPA#####
+        # If neither found
+        return ''
 
-                        # This means that it's a NPA##### code
-                        else:
-                            appended = True
-                            mlid_list.append(df_ml.iloc[idx, npaid_location])
-                        ml_structure_list.append(df_ml.iloc[idx, ml_structure_location])
-                        break
-                    idx += 1
-                if not appended:
-                    mlid_list.append('')
-                    ml_structure_list.append('')
+    # Main processing loop
+    for val in np.array(compound_locations_ml) + 2:
+        if val in compound_locations_ml_set:
+            mlid_list.append('')
+            ml_structure_list.append('')
+            continue # skip to next val
 
-    # getting names from mass list
-    compound_names_ml = df_ml.loc[:, 'Name'][compound_locations_ml].to_list()
-    ml_name_set = set()
+        idx = val
+        appended = False
+        while idx < df_ml.shape[0] and idx not in compound_locations_ml_set:
+            full_match = False
+
+            # Checking for full match depending on the type of data given
+            if ml_match_location is not None:
+                full_match = df_ml.iloc[idx, ml_match_location] == 'Full match'
+            else:
+                full_match = df_ml.iloc[val - 2, match_type_col_ml] == 'Full match'
+
+            if full_match:
+                mlid_list.append(extract_ml_id(idx))
+                ml_structure_list.append(df_ml.iloc[idx, ml_structure_location])
+                appended = True
+                break
+            idx += 1
+
+        if not appended:
+            mlid_list.append('')
+            ml_structure_list.append('')
+
+    # Build dictionary
+    compound_names_ml = df_ml.loc[compound_locations_ml, 'Name'].tolist()
     ml_dict = {}
-    for i in range(len(compound_names_ml)):
-        if compound_names_ml[i] not in ml_name_set:
-            ml_name_set.add(compound_names_ml[i])
-            ml_dict[compound_names_ml[i]] = [mlid_list[i], ml_structure_list[i]]
+    for name, mlid, struct in zip(compound_names_ml, mlid_list, ml_structure_list):
+        if name not in ml_dict:
+            ml_dict[name] = [mlid, struct]
 
-    output_df = pd.DataFrame()
-    output_df['Name'] = cs_dict.keys()
-    output_df['Formula'] = [cs_dict[i][0] for i in cs_dict.keys()]
-    output_df['Calc. MW'] = [cs_dict[i][1] for i in cs_dict.keys()]
-    output_df['RT [min]'] = [cs_dict[i][2] for i in cs_dict.keys()]
-    output_df['ChemSpider ID'] = [cs_dict[i][3] for i in cs_dict.keys()]
+    #========================================================================#
+    #=====                       Combining the Data                     =====#
+    #========================================================================#
 
-    mz_col = []
-    for i in cs_dict.keys():
-        if i in mz_dict.keys():
-            mz_col.append(mz_dict[i][0])
-        else:
-            mz_col.append('')
-    output_df['mzCloud ID'] = mz_col
-    ml_col = []
+    # Step 1: Start with base info from cs_dict
+    output_df = pd.DataFrame.from_dict(cs_dict, orient='index', columns=[
+        'Formula', 'Calc. MW', 'RT [min]', 'ChemSpider ID', 'Structure'
+    ])
+    output_df.index.name = 'Name'
+    output_df.reset_index(inplace=True)
 
-    for i in cs_dict.keys():
-        if i in ml_dict.keys():
-            ml_col.append(ml_dict[i][0])
-        else:
-            ml_col.append('')
-    output_df['Mass List ID'] = ml_col
-    annot_list = []
+    # Step 2: Add mzCloud and MassList IDs using .get() to avoid key errors
+    output_df['mzCloud ID'] = output_df['Name'].apply(lambda name: mz_dict.get(name, ['', ''])[0])
+    output_df['Mass List ID'] = output_df['Name'].apply(lambda name: ml_dict.get(name, ['', ''])[0])
 
-    for i in range(output_df.shape[0]):
-        lvl = 0
-        if str(output_df.loc[i, 'ChemSpider ID']) != '':
-            lvl += 1
-        if str(output_df.loc[i, 'mzCloud ID']) != '':
-            lvl += 1
-        if str(output_df.loc[i, 'Mass List ID']) != '':
-            lvl += 1
-        annot_list.append(lvl)
-    output_df['Annotation Level'] = annot_list
+    # Step 3: Annotation Level
+    output_df['Annotation Level'] = output_df[['ChemSpider ID', 'mzCloud ID', 'Mass List ID']].apply(
+        lambda row: sum(bool(str(val).strip()) for val in row), axis=1
+    )
 
-    structure_dict = {}
-    counter = 0
-    for names in output_df['Name']:
-        if names in cs_dict.keys():
-            structure_dict[names] = cs_dict[names][4]
-        if names in mz_dict.keys():
-            if mz_dict[names][1]:
-                structure_dict[names] = mz_dict[names][1]
-        if names in ml_dict.keys():
-            if ml_dict[names][1]:
-                structure_dict[names] = ml_dict[names][1]
+    # Step 4: Consolidated Structure priority: CS > mzCloud > MassList
+    def choose_structure(name):
+        if cs_dict.get(name, ['', '', '', '', ''])[4]:
+            return cs_dict[name][4]
+        if name in mz_dict and mz_dict[name][1]:
+            return mz_dict[name][1]
+        if name in ml_dict and ml_dict[name][1]:
+            return ml_dict[name][1]
+        return ''
+    output_df['Structure'] = output_df['Name'].apply(choose_structure)
 
-    structure_list = []
-    for i in range(output_df.shape[0]):
-        structure_list.append(structure_dict[output_df.loc[i, 'Name']])
-    output_df['Structure'] = structure_list
+    # Step 5: Add metabolite database info
+    # Build metabolite_dict from database
+    metabolite_dict = {
+        row[1]: [row[0], row[2], row[3], row[4]]
+        for row in df_database.itertuples(index=False)
+    }
 
-    # create a dictionary based on Metabolite that saves the rest of the data
-    metabolite_dict = {}
-    for i in range(df_database.shape[0]):
-        category = df_database.iloc[i, 0]
-        classification = df_database.iloc[i, 2]
-        subclass = df_database.iloc[i, 3]
-        comments = df_database.iloc[i, 4]
-        metabolite_dict[df_database.iloc[i, 1]] = [category, classification, subclass, comments]
+    def get_meta(name):
+        return metabolite_dict.get(name, ['', '', '', ''])
 
-    category, classification, subclass, comments, esi = [], [], [], [], []
-    for i in range(output_df.shape[0]):
-        esi.append('ESI+')
-        if output_df.loc[i, 'Name'] in metabolite_dict.keys():
-            category.append(metabolite_dict[output_df.loc[i, 'Name']][0])
-            classification.append(metabolite_dict[output_df.loc[i, 'Name']][1])
-            subclass.append(metabolite_dict[output_df.loc[i, 'Name']][2])
-            comments.append(metabolite_dict[output_df.loc[i, 'Name']][3])
-        else:
-            category.append('')
-            classification.append('')
-            subclass.append('')
-            comments.append('')
+    meta_info = output_df['Name'].apply(get_meta)
+    output_df[['Main Category', 'General Classification', 'Sub-class', 'Comments']] = pd.DataFrame(meta_info.tolist(), index=output_df.index)
 
-    output_df['Main Category'] = category
-    output_df['General Classification'] = classification
-    output_df['Sub-class'] = subclass
-    output_df['Comments'] = comments
-    output_df['ESI Mode'] = esi
+    # Step 6: Add ESI Mode
+    output_df['ESI Mode'] = 'ESI+'
 
-    desired_cols = ['Main Category', 'Name', 'Formula', 'ESI Mode', 'Calc. MW', 'RT [min]', 'Annotation Level', 'ChemSpider ID',
-                    'mzCloud ID', 'Mass List ID', 'General Classification', 'Sub-class', 'Comments', 'Structure']
-
+    # Step 7: Final column order
+    desired_cols = [
+        'Main Category', 'Name', 'Formula', 'ESI Mode', 'Calc. MW', 'RT [min]', 'Annotation Level',
+        'ChemSpider ID', 'mzCloud ID', 'Mass List ID', 'General Classification', 'Sub-class', 'Comments', 'Structure'
+    ]
+    
     output_df = output_df[desired_cols]
+
+    #========================================================================#
+    #=====                    Creating the Excel Sheet                  =====#
+    #========================================================================#
 
     # download output_df as an excel file
     output_df.to_excel('output.xlsx', index=False)
