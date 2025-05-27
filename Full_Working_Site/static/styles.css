@@ -67,6 +67,10 @@ body {
   filter: blur(6px);
 }
 
+#background-blur.blurred {
+  filter: blur(6px);
+}
+
 a:link, a:visited {
   color: var(--quantum-glow-accent);
   text-decoration: none;
