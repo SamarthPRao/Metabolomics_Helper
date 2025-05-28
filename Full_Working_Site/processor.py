@@ -42,9 +42,9 @@ def process_files(cs, mz, ml, database):
 
 
     # Finds relevant indices for compound search later
-    cs_id_location, cs_ref_location, cs_structure_location = [df_cs.iloc[1].tolist().index(k) for k in ['CSID', '# References', 'Structure']]
-    mz_id_location, mz_match_location, mz_structure_location = [df_mz.iloc[1].tolist().index(k) for k in ['mzCloud ID', 'Best Match', 'Structure']]
-    ml_id_location, ml_structure_location = [df_ml.iloc[1].tolist().index(k) for k in ['FL_index', 'Structure']]
+    cs_id_location, cs_ref_location, cs_structure_location, cs_name_location = [df_cs.iloc[1].tolist().index(k) for k in ['CSID', '# References', 'Structure', 'Name']]
+    mz_id_location, mz_match_location, mz_structure_location, mz_name_location = [df_mz.iloc[1].tolist().index(k) for k in ['mzCloud ID', 'Best Match', 'Structure', 'Name']]
+    ml_id_location, ml_structure_location, ml_name_location = [df_ml.iloc[1].tolist().index(k) for k in ['FL_index', 'Structure', 'Name']]
 
     #========================================================================#
     #=====                          ChemSpider                          =====#
@@ -60,6 +60,7 @@ def process_files(cs, mz, ml, database):
     # Prepare output lists and set for fast lookup
     csid_list = []
     cs_structure_list = []
+    cs_name_list = []
     compound_locations_cs_set = set(compound_locations_cs)
 
     # Determine the column to use for match type - 'Match Type' may not exist
@@ -77,21 +78,26 @@ def process_files(cs, mz, ml, database):
             if df_cs.iloc[start_idx - 2, match_col_idx] == match_value:
                 ref_count = df_cs.iloc[idx, cs_ref_location]
                 candidates[ref_count] = [
+                    df_cs.iloc[idx, cs_name_location],
                     df_cs.iloc[idx, cs_id_location],
                     df_cs.iloc[idx, cs_structure_location]
                 ]
             idx += 1
-        return candidates.get(max(candidates, default=0), ['', ''])
+        return candidates.get(max(candidates, default=0), ['', '', ''])
 
     # Process each compound starting point
     for val in np.array(compound_locations_cs) + 2:
         if val in compound_locations_cs_set:
+            cs_name_list.append('')
             csid_list.append('')
             cs_structure_list.append('')
+            
         else:
-            csid, structure = get_best_candidate_cs(val, match_type_col_cs)
+            csid, structure, name = get_best_candidate_cs(val, match_type_col_cs)
+            cs_name_list.append(name)
             csid_list.append(csid)
             cs_structure_list.append(structure)
+            
 
     # Get relevant compound metadata columns
     cols = ['Name', 'Formula', 'Calc. MW', 'RT [min]']
@@ -108,12 +114,13 @@ def process_files(cs, mz, ml, database):
         compound_data['Calc. MW'],
         compound_data['RT [min]'],
         csid_list,
-        cs_structure_list
+        cs_structure_list,
+        cs_name_list
     ):
         name = row[0]
         if name not in cs_dict:
             # remember CSID is in number format, so we have to make it a string for link generation later
-            cs_dict[name] = list(row[1:-2]) + [str(row[-2]), row[-1]]
+            cs_dict[name] = list(row[1:-3]) + [str(row[-3]), row[-2], row[-1]]
 
 
     #========================================================================#
@@ -122,12 +129,14 @@ def process_files(cs, mz, ml, database):
 
     mz_id_list = []
     mz_structure_list = []
+    mz_name_list = []
     compound_locations_mz_set = set(compound_locations_mz)
 
     # There is no worrying about whether match type exists here
     # So far it is always there in the data we've seen
     for i, val in enumerate(np.array(compound_locations_mz) + 2):
         if val in compound_locations_mz_set:
+            mz_name_list.append('')
             mz_id_list.append('')
             mz_structure_list.append('')
         else:
@@ -135,25 +144,33 @@ def process_files(cs, mz, ml, database):
             candidates = {}
             while idx < df_mz.shape[0] and idx not in compound_locations_mz_set:
                 if 'Reference' in df_mz.iloc[idx, mz_id_location]:
-                    candidates[df_mz.iloc[idx, mz_match_location]] = [df_mz.iloc[idx, mz_id_location][10:],
+                    candidates[df_mz.iloc[idx, mz_match_location]] = [df_mz.iloc[idx, mz_name_location],
+                                                                      df_mz.iloc[idx, mz_id_location][10:],
                                                                       df_mz.iloc[idx, mz_structure_location]]
                 idx += 1
             if len(candidates) == 0:
+                mz_name_list.append('')
                 mz_id_list.append('')
                 mz_structure_list.append('')
             else:
-                mz_id_list.append(candidates[max(candidates.keys())][0])
-                mz_structure_list.append(candidates[max(candidates.keys())][1])
+                mz_name_list.append(candidates[max(candidates.keys())][0])
+                mz_id_list.append(candidates[max(candidates.keys())][1])
+                mz_structure_list.append(candidates[max(candidates.keys())][2])
     # Getting compound names for this file
     compound_names_mz = df_mz.loc[:, 'Name'][compound_locations_mz].to_list()
 
     # create mzCloud dictionary
     mz_name_set = set()
     mz_dict = {}
+    print("Lengths:")
+    print("compound_names_mz:", len(compound_names_mz))
+    print("mz_name_list:", len(mz_name_list))
+    print("mz_id_list:", len(mz_id_list))
+    print("mz_structure_list:", len(mz_structure_list))
     for i in range(len(compound_names_mz)):
         if compound_names_mz[i] not in mz_name_set:
             mz_name_set.add(compound_names_mz[i])
-            mz_dict[compound_names_mz[i]] = [mz_id_list[i], mz_structure_list[i]]
+            mz_dict[compound_names_mz[i]] = [mz_name_list[i], mz_id_list[i], mz_structure_list[i]]
 
 
     #========================================================================#
@@ -167,6 +184,7 @@ def process_files(cs, mz, ml, database):
 
     mlid_list = []
     ml_structure_list = []
+    ml_name_list = []
     compound_locations_ml_set = set(compound_locations_ml)
 
     # Helper function for ID extraction
@@ -184,6 +202,7 @@ def process_files(cs, mz, ml, database):
     # Main processing loop
     for val in np.array(compound_locations_ml) + 2:
         if val in compound_locations_ml_set:
+            ml_name_list.append('')
             mlid_list.append('')
             ml_structure_list.append('')
             continue # skip to next val
@@ -200,6 +219,7 @@ def process_files(cs, mz, ml, database):
                 full_match = df_ml.iloc[val - 2, match_type_col_ml] == 'Full match'
 
             if full_match:
+                ml_name_list.append(df_ml.iloc[idx, ml_name_location])
                 mlid_list.append(extract_ml_id(idx))
                 ml_structure_list.append(df_ml.iloc[idx, ml_structure_location])
                 appended = True
@@ -207,15 +227,16 @@ def process_files(cs, mz, ml, database):
             idx += 1
 
         if not appended:
+            ml_name_list.append('')
             mlid_list.append('')
             ml_structure_list.append('')
 
     # Build dictionary
     compound_names_ml = df_ml.loc[compound_locations_ml, 'Name'].tolist()
     ml_dict = {}
-    for name, mlid, struct in zip(compound_names_ml, mlid_list, ml_structure_list):
+    for name, ml_name, mlid, struct in zip(compound_names_ml, ml_name_list, mlid_list, ml_structure_list):
         if name not in ml_dict:
-            ml_dict[name] = [mlid, struct]
+            ml_dict[name] = [ml_name, mlid, struct]
 
     #========================================================================#
     #=====                       Combining the Data                     =====#
@@ -223,14 +244,21 @@ def process_files(cs, mz, ml, database):
 
     # Step 1: Start with base info from cs_dict
     output_df = pd.DataFrame.from_dict(cs_dict, orient='index', columns=[
-        'Formula', 'Calc. MW', 'RT [min]', 'ChemSpider ID', 'Structure'
+        'Formula', 'Calc. MW', 'RT [min]', 'ChemSpider Name', 'ChemSpider ID', 'Structure'
     ])
     output_df.index.name = 'Name'
     output_df.reset_index(inplace=True)
 
-    # Step 2: Add mzCloud and MassList IDs using .get() to avoid key errors
-    output_df['mzCloud ID'] = output_df['Name'].apply(lambda name: mz_dict.get(name, ['', ''])[0])
-    output_df['Mass List ID'] = output_df['Name'].apply(lambda name: ml_dict.get(name, ['', ''])[0])
+    # mzCloud columns
+    output_df[['mzCloud Name', 'mzCloud ID', 'mzCloud Structure']] = pd.DataFrame(
+    output_df['Name'].apply(lambda name: mz_dict.get(name, ['', '', ''])).tolist(),
+    index=output_df.index
+    )
+
+    output_df[['Mass List Name', 'Mass List ID', 'Mass List Structure']] = pd.DataFrame(
+        output_df['Name'].apply(lambda name: ml_dict.get(name, ['', '', ''])).tolist(),
+        index=output_df.index
+    )
 
     # Step 3: Annotation Level
     output_df['Annotation Level'] = output_df[['ChemSpider ID', 'mzCloud ID', 'Mass List ID']].apply(
@@ -239,12 +267,15 @@ def process_files(cs, mz, ml, database):
 
     # Step 4: Consolidated Structure priority: CS > mzCloud > MassList
     def choose_structure(name):
-        if cs_dict.get(name, ['', '', '', '', ''])[4]:
-            return cs_dict[name][4]
-        if name in mz_dict and mz_dict[name][1]:
-            return mz_dict[name][1]
-        if name in ml_dict and ml_dict[name][1]:
-            return ml_dict[name][1]
+        # ChemSpider: structure is at index 4
+        if cs_dict.get(name, ['', '', '', '', '', ''])[4]:
+            return cs_dict[name][5]
+        # mzCloud: structure is at index 2
+        if name in mz_dict and mz_dict[name][2]:
+            return mz_dict[name][2]
+        # MassList: structure is at index 2
+        if name in ml_dict and ml_dict[name][2]:
+            return ml_dict[name][2]
         return ''
     output_df['Structure'] = output_df['Name'].apply(choose_structure)
 
@@ -266,8 +297,11 @@ def process_files(cs, mz, ml, database):
 
     # Step 7: Final column order
     desired_cols = [
-        'Main Category', 'Name', 'Formula', 'ESI Mode', 'Calc. MW', 'RT [min]', 'Annotation Level',
-        'ChemSpider ID', 'mzCloud ID', 'Mass List ID', 'General Classification', 'Sub-class', 'Comments', 'Structure'
+    'Main Category', 'Name', 'Formula', 'ESI Mode', 'Calc. MW', 'RT [min]', 'Annotation Level',
+    'ChemSpider Name', 'ChemSpider ID',
+    'mzCloud Name', 'mzCloud ID',
+    'Mass List Name', 'Mass List ID',
+    'General Classification', 'Sub-class', 'Comments', 'Structure'
     ]
     
     output_df = output_df[desired_cols]
@@ -413,16 +447,29 @@ def process_files(cs, mz, ml, database):
     # Center all cells in the entire worksheet, except for column B's entries
     for row in sheet.iter_rows():
         for cell in row:
-            if cell.column in [2, 11, 12, 13] and cell.row > 1:  # For column B entries (skip header)
-                cell.alignment = Alignment(horizontal='left')  # Left-align column B entries
+            if cell.column in [2, 11, 12, 13] and cell.row > 1:
+                cell.alignment = Alignment(horizontal='left')  # Left-align selected columns
             else:
                 cell.alignment = Alignment(horizontal='center')  # Center align all other cells
 
-    new_sheet = workbook.create_sheet("Structures")
-    for i, cell in enumerate(sheet['N'], start=1):
-        new_sheet[f'A{i}'] = cell.value  # Copy value to new sheet
+    # Move 'Structure' column to a new sheet
+    structure_col_idx = None
+    for cell in sheet[1]:  # Header row
+        if cell.value == "Structure":
+            structure_col_idx = cell.column
+            break
 
-    sheet.delete_cols(14)
+    if structure_col_idx is None:
+        raise ValueError("Structure column not found!")
+
+    # Create new sheet and copy structure values
+    new_sheet = workbook.create_sheet("Structures")
+    new_sheet['A1'] = "Structure"
+    for row in range(2, sheet.max_row + 1):
+        new_sheet[f'A{row}'] = sheet.cell(row=row, column=structure_col_idx).value
+
+    # Delete 'Structure' column from main sheet
+    sheet.delete_cols(structure_col_idx)
 
     return workbook
 
