@@ -1,5 +1,7 @@
 import pandas as pd
 import seaborn as sns
+import matplotlib
+matplotlib.use("Agg")  # doesn't actually try and display it
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from openpyxl import Workbook
